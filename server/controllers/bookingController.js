@@ -315,7 +315,7 @@ const deleteBookingOwner = async (req, res) => {
     }
 };
 
-// @desc  Owner marks booking as refunded
+// @desc  Owner marks booking as refunded and process actual Razorpay Refund
 // @route PATCH /api/bookings/:id/refund
 const refundBooking = async (req, res) => {
     try {
@@ -330,6 +330,26 @@ const refundBooking = async (req, res) => {
         }
         if (booking.paymentStatus !== 'paid') {
             return res.status(400).json({ message: 'Only paid bookings can be refunded' });
+        }
+
+        // --- ACTUAL RAZORPAY REFUND INTEGRATION ---
+        if (booking.razorpayPaymentId) {
+            try {
+                // Calling Razorpay API to issue a full refund back to the customer's card
+                await getRazorpay().payments.refund(booking.razorpayPaymentId, {
+                    notes: {
+                        reason: 'Booking cancelled by user/owner',
+                        bookingId: booking._id.toString()
+                    }
+                });
+                console.log(`✅ Successfully refunded Razorpay payment: ${booking.razorpayPaymentId}`);
+            } catch (rzpError) {
+                console.error("❌ RAZORPAY REFUND ERROR:", rzpError);
+                return res.status(500).json({
+                    message: 'Failed to process refund with Razorpay gateway',
+                    error: rzpError.description || rzpError.message || 'Unknown Gateway Error'
+                });
+            }
         }
 
         booking.paymentStatus = 'refunded';
