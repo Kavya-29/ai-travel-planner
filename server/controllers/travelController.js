@@ -1,7 +1,6 @@
 const fs = require('fs');
 const path = require('path');
 const TravelPlan = require('../models/TravelPlan');
-const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const { callGroq } = require('../utils/ai');
 
@@ -21,7 +20,13 @@ You are an expert travel planner. Create a highly detailed, professional travel 
 - Interests: ${Array.isArray(interests) ? interests.join(', ') : (interests || 'General exploration')}
 - Style: ${preferences || 'Standard'}
 
-Return ONLY a JSON object with this exact structure (no markdown, no extra text):
+CRITICAL INSTRUCTION: First, strictly verify if "${place}" is a real, existing city, state, country, or recognized tourist destination AND that it is spelled correctly. 
+If "${place}" is misspelled (like "duabi" instead of "Dubai" or "americ" instead of "America"), completely fictional, non-existent, or gibberish (e.g., "asdfgasdf", "Neverland", "Gotham"), you MUST NOT generate a travel plan. Instead, return EXACTLY this JSON object:
+{
+  "error": "The location '${place}' could not be found or is misspelled. Did you mean [Suggested Correct Spelling]? Please check the spelling and try again."
+}
+
+If the place is valid and spelled correctly, return ONLY a JSON object with this exact structure (no markdown, no extra text):
 {
   "introduction": "A captivating 3-4 sentence introduction about ${place} matching the user's interests.",
   "rating": 4.8,
@@ -74,6 +79,10 @@ Return ONLY a JSON object with this exact structure (no markdown, no extra text)
         } catch (parseErr) {
             console.error('JSON PARSE ERROR. Raw text:', text);
             throw new Error('AI returned invalid JSON format. Please try again.');
+        }
+
+        if (data.error) {
+            return res.status(400).json({ message: data.error });
         }
 
         res.json(data);

@@ -79,7 +79,7 @@ const GuestDashboard = () => {
         const file = e.target.files[0];
         if (!file) return;
 
-        // Validating file size (max 4MB for Gemini)
+        // Validating file size (max 4MB for AI)
         if (file.size > 4 * 1024 * 1024) {
             toast.error("Image too large. Please use an image under 4MB.");
             return;
