@@ -102,6 +102,27 @@ const MyBookingsPage = () => {
                         {bookings.length > 0 ? (
                             bookings.map((booking) => {
                                 const symbol = getCurrencySymbol(booking.property?.currency);
+
+                                let isAutoRefunded = false;
+                                if (booking.status === 'cancelled' && booking.paymentStatus === 'paid' && booking.updatedAt) {
+                                    let workingDaysCount = 0;
+                                    let currDate = new Date(booking.updatedAt);
+                                    const currentDate = new Date();
+
+                                    while (currDate <= currentDate) {
+                                        const dayOfWeek = currDate.getDay();
+                                        if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+                                            workingDaysCount++;
+                                        }
+                                        currDate.setDate(currDate.getDate() + 1);
+                                    }
+                                    if (workingDaysCount >= 7) {
+                                        isAutoRefunded = true;
+                                    }
+                                }
+
+                                const displayPaymentStatus = isAutoRefunded ? 'refunded' : booking.paymentStatus;
+                                
                                 return (
                                     <motion.div
                                         initial={{ opacity: 0, y: 20 }}
@@ -133,11 +154,11 @@ const MyBookingsPage = () => {
                                                         }`}>
                                                         {booking.status}
                                                     </span>
-                                                    <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${booking.paymentStatus === 'paid' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' :
-                                                        booking.paymentStatus === 'refunded' ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20' :
+                                                    <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${displayPaymentStatus === 'paid' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' :
+                                                        displayPaymentStatus === 'refunded' ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20' :
                                                             'bg-slate-800 text-slate-500 border border-slate-700'
                                                         }`}>
-                                                        {booking.paymentStatus === 'paid' ? 'Paid' : booking.paymentStatus === 'refunded' ? 'Refunded' : 'Unpaid'}
+                                                        {displayPaymentStatus === 'paid' ? 'Paid' : displayPaymentStatus === 'refunded' ? 'Refunded' : 'Unpaid'}
                                                     </span>
                                                 </div>
                                             </div>
@@ -161,7 +182,7 @@ const MyBookingsPage = () => {
                                                 </div>
                                             </div>
 
-                                            {booking.status === 'confirmed' && booking.paymentStatus === 'pending' && (
+                                            {booking.status === 'confirmed' && displayPaymentStatus === 'pending' && (
                                                 <motion.button
                                                     whileHover={{ scale: 1.02 }}
                                                     whileTap={{ scale: 0.98 }}
@@ -179,18 +200,18 @@ const MyBookingsPage = () => {
                                                     {payingId === booking._id ? 'Opening Payment...' : `Pay Now — ${symbol}${booking.totalPrice}`}
                                                 </motion.button>
                                             )}
-                                            {booking.paymentStatus === 'paid' && booking.status !== 'cancelled' && (
+                                            {displayPaymentStatus === 'paid' && booking.status !== 'cancelled' && (
                                                 <div className="w-full py-4 bg-green-500/10 border border-green-500/20 rounded-2xl text-green-500 font-bold flex items-center justify-center gap-2">
                                                     <CheckCircle className="w-5 h-5" />
                                                     Payment Successful - Your stay is secured!
                                                 </div>
                                             )}
-                                            {booking.status === 'cancelled' && booking.paymentStatus === 'paid' && (
+                                            {booking.status === 'cancelled' && displayPaymentStatus === 'paid' && (
                                                 <div className="w-full py-3 bg-yellow-500/10 border border-yellow-500/20 rounded-2xl text-yellow-400 text-sm font-semibold flex items-center justify-center gap-2">
                                                     🔄 Refund will be initiated within 7 working days
                                                 </div>
                                             )}
-                                            {booking.paymentStatus === 'refunded' && (
+                                            {displayPaymentStatus === 'refunded' && (
                                                 <div className="w-full py-3 bg-purple-500/10 border border-purple-500/20 rounded-2xl text-purple-400 text-sm font-semibold flex items-center justify-center gap-2">
                                                     ✅ Refund Successful - The amount has been returned
                                                 </div>

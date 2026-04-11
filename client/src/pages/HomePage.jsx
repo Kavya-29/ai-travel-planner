@@ -153,12 +153,6 @@ const HomePage = () => {
                                             </div>
                                             <h3 className="text-2xl font-bold mb-1">{dest.name}</h3>
                                             <p className="text-slate-400 text-sm font-medium">{dest.price}</p>
-
-                                            <div className="h-0 group-hover:h-12 opacity-0 group-hover:opacity-100 transition-all duration-500 mt-4 overflow-hidden">
-                                                <button className="w-full py-3 bg-white text-black rounded-xl font-bold text-sm shadow-xl hover:bg-blue-500 hover:text-white transition-colors">
-                                                    Explore Destination
-                                                </button>
-                                            </div>
                                         </div>
                                     </motion.div>
                                 ))}
